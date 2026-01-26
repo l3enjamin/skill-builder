@@ -17,6 +17,8 @@ Fail-Fast Implementation: Translate the "Constraint Checklist" from Phase 1 into
 
 Sequential Logic: Convert the "Raw Execution Steps" into the "Sequential Execution" section. Use the tools fs.read, terminal.execute, etc.
 
+Filesystem Optimization: Only the MainExecution class should reside in the root SKILL.md. All modular subclasses (QualityOptimizer, PerformanceOptimizer, ErrorHandler) must be placed in separate files in the 'resources/' directory to minimize context usage.
+
 Output
 
 Generate the Draft SKILL.md file. Do not worry about edge-case optimization yet; focus on structural perfection and completing all template fields.

@@ -1,15 +1,15 @@
 ---
-[Instructions of filling the template: Always fill in the skill template like a decision tree, with the decision point that can eliminate most of the Type I error first, like preparing a Mayday Checklist for a Pilot.]
+[Instructions: Structure skill as object-oriented classes with lazy-loading subclasses]
+[Purpose: Minimize cognitive load - only load MainExecution first, enhance on-demand]
+[Filesystem Optimization: The SKILL.md file must ONLY contain the MainExecution class. All modular subclasses (e.g. QualityOptimizer) must be placed in separate files in the 'resources/' folder.]
 ---
-[Purpose of metadata section: Capture the agent’s attention if they are working on something relevant, but allow the agent to exit quickly when the skill is not applicable. Lists should always be filled with descending importance.]
 
-name: [skill-identifier]
+name: skill-identifier
 description: |
-  [One sentence: Purpose of the skill - the single most important output it produce, and the single most important input it won't work without.]
+  [One sentence: Purpose - single most important output it produces, and single most important input it won't work without.]
 
 metadata:
   keywords:
-  [Think of an agent coming in with a problem in their hands, what is the most helpful keyword for them to make decision of continue or exit? Keyword tokens only NO FULL SENTENCE HERE.]
     - [problem-type-this-solves]
     - [use-case-indicator]
     - [primary-domain-term]
@@ -28,82 +28,471 @@ metadata:
       - "[Will work if it passes diagnosis below scenario]"
     
     constraints:
-    [Minimum viable constraints only]
-      - context_window: "equivalent to reading [famous piece of writing with similar length/complexity]"
-      - tools: ["[tools-that-actually-exist-in-github-mcp-or--modelcontextprotocol-io]"]
-      - resources: 
-        [It won't work without this. Come back when you have all of these only.]
-        - modality: "[image, text, audio, video, embeddings, binary]"
-          context: "[semantic context of the resource]"
-      - cognitive_load: "equivalent to understanding [well-defined common scientific problem]"
+      - context_window: "equivalent to reading [famous piece of writing]"
+      - tools: ["[actual-mcp-tool-name]"]
+      - resources:
+          - modality: "[text|image|audio|video|embeddings|binary]"
+            context: "[semantic context of resource]"
+      - cognitive_load: "equivalent to understanding [well-defined scientific problem]"
   
   version: "[semver]"
   skill_type: "[tool-mcp|tool-function|tool-rag|orchestration|recursive|multi-modal|linear|async]"
+  architecture: "ool"
+
+extends: [parent-skill-if-any]
+implements: [tool-interface-1, tool-interface-2]
 
 license: MIT
 ---
-[Instruction of filling the main skill procedure: Use pseudo code IF-THEN-ELSE, priortize the decision points that can eliminate most of the ineligible cases first. Provide error handling instructions with CASE WHEN THEN ELSE with any quick alternatives to this skill if available. Make it obvious on where to exit is not eligible.]
 
-## Step 1 - Diagnosis: Checklist for Eligibility
+# Class: MainExecution
 
-**Output:** Decision to proceed or not and reason, any alternatives and reason
+**Entry Point:** Always execute constructor first for eligibility diagnosis
+
+## Constructor: __init__(context)
+
+**Input:** 
+```yaml
+context:
+  user_query: string
+  available_tools: list
+  resources: dict
+```
+
+**Output:** 
+```yaml
+decision:
+  proceed: bool
+  reason: string
+  alternatives: list[string]  # if not proceeding
+```
 
 **Process:**
-1. IF [Condition to eliminate ~60% of the ineligible cases] IS TRUE THEN GO TO 2 ELSE IF [Alternative condition that the first cannot be met] IS TRUE THEN GO TO [Alternative step] ELSE [Artifact to retain, failure output and EXIT]
-2. [Condition to eliminate ~30% of the ineligible cases] IS TRUE THEN GO TO 2 ELSE IF [Alternative condition that the first cannot be met] IS TRUE THEN GO TO [Alternative step] ELSE [Artifact to retain, failure output and EXIT]
-[...until diagnosis complete]
+```python
+# Fail-fast checks - eliminate 95% of wrong cases in first 3 checks
+IF exit_when[0]:  # catches ~60% of ineligible
+    RETURN {proceed: false, reason: "[specific reason]", alternatives: ["skill-name"]}
+    EXIT
 
-**Checkpoint:** [Yes/no condition - if YES then proceed to Step 2, if NO then: what is missing and the agent should check if those can be acquired by other skills/tools or from the user.]
+IF exit_when[1]:  # catches ~30% of remaining
+    RETURN {proceed: false, reason: "[specific reason]"}
+    EXIT
+
+IF exit_when[2]:  # catches ~10% of remaining
+    RETURN {proceed: false, reason: "[specific reason]"}
+    EXIT
+
+# Resource validation
+IF required_resource NOT available:
+    RETURN {proceed: false, reason: "Missing: [resource]", alternatives: ["acquire via skill-X"]}
+    EXIT
+
+# All checks passed
+IF all proceed_when conditions met:
+    ALLOCATE context_window
+    ALLOCATE cognitive_load
+    INSTANTIATE MainExecution
+    RETURN {proceed: true, reason: "[why this is optimal path]"}
+
+ELSE:
+    RETURN {proceed: false, reason: "Ambiguous case: [explain]"}
+    EXIT
+```
 
 ---
 
-[Actual execution of skill: Put everything required to execute sequentially in the same step, only branch another step when multiple alternative steps are available, steps that can executed in parallel, or steps that is recursive. Provide clear indication of the decision point of branching and parallel execution.]
+## Method: execute()
 
-## Step 2: [What this phase accomplishes]
+**Minimum Viable Path** - core logic only, no enhancements
 
-**Output:** [What artifact or outcomes that is produced from the action should the agent retains to make decisions.]
+**Input:**
+```yaml
+validated_context: dict  # from constructor
+```
+
+**Output:**
+```yaml
+artifact:
+  type: string
+  content: any
+  quality_score: float
+  metadata: dict
+```
 
 **Process:**
-1. [First concrete action]
-2. [Second concrete action]
-3. [Third concrete action]
+```python
+# Core execution - minimum steps to produce output
+TRY:
+    step_1_result = action_1()  # [describe concrete action]
+    
+    step_2_result = action_2(step_1_result)  # [describe concrete action]
+    
+    final_artifact = action_3(step_2_result)  # [describe concrete action]
+    
+    RETURN {
+        type: "[artifact-type]",
+        content: final_artifact,
+        quality_score: self.assess_quality(final_artifact),
+        metadata: {timestamp, version, trial_count: 1}
+    }
 
-**Next Step:**
-IF [minimum quality check condition met]:
-THEN [artifact to retain]; GO TO Step 3;
-ELSE IF [alternative route conditions];
-THEN [artifact to retain]; GO TO [step of alternative route];
-ELSE IF [check if agent cannot remember how many times they have been here or have been here more than 3 times];
-THEN [output all artifacts without any condition]; [recovery action, handoff, report failure and exit];
-ELSE IF [recoverable error condition]:
-THEN [artifact to retain and why it fails]; GO TO Step 2;
-ELSE [artifact to retain and why it fails];
-EXIT [recovery action, handoff, report failure reason and exit]
+CATCH error:
+    IF recoverable:
+        CALL ErrorHandler.recover(error)
+    ELSE:
+        RETURN partial_artifact with error_report
+        EXIT
+```
+
+**Checkpoint:**
+```python
+IF quality_score >= minimum_threshold:
+    RETURN artifact
+ELSE IF quality_score < minimum_threshold AND trial_count < 5:
+    CALL QualityOptimizer.enhance(artifact)
+ELSE:
+    RETURN artifact with quality_warning
+```
 
 ---
 
-[Repeat all the step same as Step 2 until all branches are closed.]
+# Subclass: QualityOptimizer [LAZY-LOAD]
+
+**When to instantiate:** 
+- Output quality_score < desired_threshold
+- User explicitly requests enhancement
+- Token budget allows (estimated_cost tokens available)
+
+## Method: enhance(artifact)
+
+**Input:**
+```yaml
+artifact: dict  # from MainExecution.execute()
+enhancement_type: string  # optional: "accuracy"|"completeness"|"formatting"
+```
+
+**Output:**
+```yaml
+enhanced_artifact: dict
+improvement_delta: float  # quality_score increase
+```
+
+**Process:**
+```python
+IF enhancement_type == "accuracy":
+    apply_best_practice_1()  # [describe specific improvement]
+    verify_consistency()
+    
+ELSE IF enhancement_type == "completeness":
+    apply_best_practice_2()  # [describe specific improvement]
+    fill_gaps()
+    
+ELSE IF enhancement_type == "formatting":
+    apply_best_practice_3()  # [describe specific improvement]
+    standardize_output()
+
+ELSE:  # auto-detect needed improvements
+    FOR each_best_practice IN [practice_1, practice_2, practice_3]:
+        IF applicable(each_best_practice, artifact):
+            apply(each_best_practice)
+
+RETURN {
+    enhanced_artifact: improved_version,
+    improvement_delta: new_score - old_score
+}
+```
 
 ---
 
-## Final Step: Quality Check
+# Subclass: PerformanceOptimizer [LAZY-LOAD]
 
-**CRITICAL:** Before proceeding, check your memory to see if you have been here 5 times already, if you have, or there is no memory at all, immediately cache all artifacts, stop and output that the skill has failed.
+**When to instantiate:**
+- Token budget is high (>10k available)
+- Execution time matters (user requested fast)
+- Multiple independent subtasks detected
 
-**Input:** A ready-for-use version of this skill's output.
+## Method: parallelize(tasks)
 
-**Output:** Whether the output is good enough for the user's needs.
+**Input:**
+```yaml
+tasks: list[callable]  # independent subtasks
+max_concurrent: int    # system limit
+```
+
+**Output:**
+```yaml
+results: list[any]
+execution_time: float
+```
 
 **Process:**
-1. Check if the output is logical and not making any contradictions.
-2. Check if the output is [the single most important output as in the descripton of the metadata] and [any acceptance criteria that renders the output useless if not met].
-3. Check if the output is ambiguous and needs clarification.
-4. Check if the output is practical to the user's circumstances.
+```python
+# Identify parallelizable tasks
+independent_tasks = detect_no_dependencies(tasks)
 
-**Next Step:** 
-Memory.num-of-tries++
-IF Memory.num-of-tries > 5;
-THEN [output all artifacts without any condition]; [recovery action, handoff, report failure and exit];
-ELSE IF [output is ready-for-use];
-THEN [output artifact in required format]; [Confirm completion and Exit];
-ELSE [think of why the output is not acceptable]; [go to the appropriate step to fix it];
+# Execute in parallel
+PARALLEL:
+    result_1 = task_1()
+    result_2 = task_2()
+    result_3 = task_3()
+
+# Synchronization point
+SYNC all_results
+
+# Combine results
+combined = merge_results(all_results)
+
+RETURN {
+    results: combined,
+    execution_time: end_time - start_time
+}
+```
+
+---
+
+# Subclass: ErrorHandler [LAZY-LOAD]
+
+**When to instantiate:** MainExecution.execute() throws error
+
+## Method: recover(error)
+
+**Input:**
+```yaml
+error:
+  type: string
+  message: string
+  context: dict
+  recoverable: bool
+```
+
+**Output:**
+```yaml
+recovery_result:
+  success: bool
+  action_taken: string
+  fallback_artifact: any  # if recovery successful
+```
+
+**Process:**
+```python
+CASE error.type:
+    
+    WHEN "tool_unavailable":
+        IF alternative_tool_exists:
+            CALL fallback_implementation(alternative_tool)
+            RETURN {success: true, action_taken: "used [alt-tool]"}
+        ELSE:
+            CALL manual_workaround()
+            RETURN {success: true, action_taken: "manual workaround"}
+    
+    WHEN "resource_missing":
+        prompt_user_for(error.context.missing_resource)
+        RETURN {success: false, action_taken: "awaiting user input"}
+    
+    WHEN "timeout":
+        cache_current_state()
+        WAIT [retry_delay]
+        RETRY with same_parameters
+        RETURN {success: true, action_taken: "retried after timeout"}
+    
+    WHEN "rate_limit":
+        IF low_cost_alternative_exists:
+            CALL alternative_approach()
+        ELSE:
+            WAIT [rate_limit_window]
+            RETRY
+        RETURN {success: true, action_taken: "switched approach"}
+    
+    WHEN "ambiguous_input":
+        ask_clarification(error.context.ambiguity_details)
+        RETURN {success: false, action_taken: "requested clarification"}
+    
+    DEFAULT:
+        cache_all_artifacts()
+        log_error_details(error)
+        RETURN {
+            success: false,
+            action_taken: "cached state and exited",
+            fallback_artifact: partial_results
+        }
+```
+
+---
+
+# Interface: ToolContract
+
+**Required MCP implementations** - skill won't work without these
+
+```yaml
+required_tools:
+  - name: "[mcp-tool-1]"
+    methods: ["method_a", "method_b"]
+    validation: "[how to check if available]"
+    
+  - name: "[mcp-tool-2]"
+    methods: ["method_c"]
+    validation: "[how to check if available]"
+```
+
+**Validation Process:**
+```python
+FOR each required_tool IN required_tools:
+    IF NOT tool_available(required_tool.name):
+        RAISE CompatibilityError(
+            missing: required_tool.name,
+            alternative_skill: "[suggest fallback skill]"
+        )
+        EXIT
+```
+
+---
+
+# Composition: Dependencies
+
+**Inheritance:**
+```yaml
+extends: [parent-skill-name]  # if inheriting from another skill
+overides: ["method_x", "method_y"]  # methods that differ from parent
+```
+
+**Required Dependencies:**
+```yaml
+requires:
+  - skill: "prerequisite-skill-1"
+    at_step: "Step 2"  # when this dependency is needed
+    reason: "[why it's needed]"
+    
+  - skill: "prerequisite-skill-2"
+    at_step: "QualityOptimizer.enhance"
+    reason: "[why it's needed]"
+```
+
+**Composable With:**
+```yaml
+can_compose:
+  - skill: "complementary-skill-1"
+    relationship: "sequential"  # this skill's output → their input
+    
+  - skill: "complementary-skill-2"
+    relationship: "parallel"    # can run simultaneously
+    
+  - skill: "complementary-skill-3"
+    relationship: "alternative" # either this OR that skill
+```
+
+---
+
+# Execution Flow
+
+**Token Budget Allocation:**
+```yaml
+estimated_costs:
+  MainExecution.constructor: [number] tokens
+  MainExecution.execute: [number] tokens
+  QualityOptimizer.enhance: [number] tokens (optional)
+  PerformanceOptimizer: [number] tokens (optional)
+  ErrorHandler: [number] tokens (lazy-load)
+  
+total_minimum: [sum of required] tokens
+total_maximum: [sum of all including optional] tokens
+```
+
+**Execution Order:**
+```
+1. ALWAYS: MainExecution.__init__()  → exit_fast if incompatible
+2. IF proceed: MainExecution.execute() → produce minimum viable artifact
+3. IF quality_low: QualityOptimizer.enhance() → improve artifact
+4. IF error: ErrorHandler.recover() → attempt recovery
+5. RETURN final_artifact
+```
+
+**Memory Management:**
+```python
+# For recursive skills - prevent infinite loops
+trial_counter = 0
+max_trials = 5
+
+BEFORE each_iteration:
+    IF trial_counter >= max_trials OR cannot_remember_count:
+        cache_all_artifacts()
+        RETURN partial_result with failure_report
+        EXIT
+    
+    trial_counter += 1
+```
+
+---
+
+# Anti-Patterns
+
+**Premature Enhancement:**
+- Don't load QualityOptimizer before MainExecution completes
+- Fix: Check quality_score first, enhance only if needed
+
+**Monolithic Execution:**
+- Don't put optional enhancements in MainExecution
+- Fix: Move all "nice-to-have" logic to Optimizer subclasses
+
+**Hidden Dependencies:**
+- Don't reference other skills without declaring in Composition section
+- Fix: Explicitly list all required/composable skills with relationships
+
+**Implicit State:**
+- Don't rely on context that isn't passed as parameter
+- Fix: All methods declare INPUT/OUTPUT explicitly
+
+**Ignoring Trial Limits:**
+- Don't recurse without checking trial_counter
+- Fix: Always validate trial_count before loops/recursion
+
+---
+
+# Usage Examples
+
+**Minimum viable execution (goldfish model):**
+```python
+skill = MainExecution(context)
+IF skill.proceed:
+    artifact = skill.execute()
+    RETURN artifact
+ELSE:
+    EXIT with skill.reason
+```
+
+**Enhanced execution (smart model with tokens):**
+```python
+skill = MainExecution(context)
+IF skill.proceed:
+    base_artifact = skill.execute()
+    
+    IF base_artifact.quality_score < 0.8:
+        optimizer = QualityOptimizer()
+        enhanced = optimizer.enhance(base_artifact)
+        RETURN enhanced
+    ELSE:
+        RETURN base_artifact
+```
+
+**Full-featured execution (high token budget):**
+```python
+skill = MainExecution(context)
+IF skill.proceed:
+    TRY:
+        perf_optimizer = PerformanceOptimizer()
+        tasks = perf_optimizer.parallelize(skill.subtasks)
+        base_artifact = skill.execute(tasks)
+        
+        quality_optimizer = QualityOptimizer()
+        final_artifact = quality_optimizer.enhance(base_artifact)
+        
+        RETURN final_artifact
+        
+    CATCH error:
+        error_handler = ErrorHandler()
+        recovery = error_handler.recover(error)
+        
+        IF recovery.success:
+            RETURN recovery.fallback_artifact
+        ELSE:
+            EXIT with error_report
+```
