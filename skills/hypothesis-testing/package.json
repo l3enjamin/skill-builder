@@ -1,0 +1,20 @@
+{
+  "name": "@skills/hypothesis-testing",
+  "version": "1.0.0",
+  "description": "Execute cheapest tests in the logic-tree one-by-one to eliminate branches",
+  "main": "SKILL.md",
+  "keywords": [
+    "hypothesis-testing",
+    "verification",
+    "elimination",
+    "scientific-method"
+  ],
+  "agentskills": {
+    "skill_type": "cognitive"
+  },
+  "dependencies": {
+    "@skills/logic-tree": "workspace:*"
+  },
+  "author": "l3enjamin",
+  "license": "MIT"
+}
