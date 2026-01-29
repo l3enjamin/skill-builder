@@ -19,6 +19,9 @@ license: MIT
 
 ```bash
 # Search by keyword (instant, no install needed)
+bun scripts/search_skills.js <keyword>
+
+# Or with node (fallback)
 node scripts/search_skills.js <keyword>
 
 # List all skills (if installed)
@@ -32,7 +35,7 @@ npm query "[keywords~=<keyword>]"
 
 ```javascript
 // 1. Search
-const result = terminal.execute("node scripts/search_skills.js brainstorming");
+const result = terminal.execute("bun scripts/search_skills.js brainstorming");
 const skill_name = parse_first_result(result);
 
 // 2. Read instructions

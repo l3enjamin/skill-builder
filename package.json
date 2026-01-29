@@ -7,7 +7,8 @@
     "skills/*"
   ],
   "scripts": {
-    "search": "node scripts/search_skills.js",
+    "search": "bun scripts/search_skills.js",
+    "search:node": "node scripts/search_skills.js",
     "list": "npm ls --depth=0",
     "install-all": "npm install"
   },
@@ -15,11 +16,14 @@
     "agent-skills",
     "llm",
     "mcp",
-    "cognitive-automation"
+    "cognitive-automation",
+    "bun",
+    "bunx"
   ],
   "author": "l3enjamin",
   "license": "MIT",
   "engines": {
-    "node": ">=16.0.0"
+    "node": ">=16.0.0",
+    "bun": ">=1.0.0"
   }
 }
