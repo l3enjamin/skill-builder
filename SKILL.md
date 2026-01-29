@@ -1,6 +1,6 @@
 ---
 name: skill-router
-description: Find and activate skills using uv dependency resolver.
+description: Find and activate skills using npm workspaces.
 
 metadata:
   keywords:
@@ -18,56 +18,29 @@ license: MIT
 ## Find Skills
 
 ```bash
-# Search by keyword
-python scripts/search_skills.py <keyword>
+# Search by keyword (instant, no install needed)
+node scripts/search_skills.js <keyword>
 
-# List all skills
-uv tree --depth 1
+# List all skills (if installed)
+npm ls --depth=0
+
+# Query installed skills (if installed)
+npm query "[keywords~=<keyword>]"
 ```
 
 ## Activate Skill
 
-### Option A: Low Cognitive Load (Recommended)
-Inspect skill and execute step-by-step.
+```javascript
+// 1. Search
+const result = terminal.execute("node scripts/search_skills.js brainstorming");
+const skill_name = parse_first_result(result);
 
-```python
-# 1. Search
-result = terminal.execute("python scripts/search_skills.py brainstorming")
-skill_name = parse_first_result(result) # e.g., "design-thinking-ideation"
+// 2. Read instructions
+const skill_path = `skills/${skill_name}/SKILL.md`;
+const instructions = filesystem.read(skill_path);
 
-# 2. Inspect structure
-structure = terminal.execute(f"python scripts/search_skills.py --skill {skill_name}")
-# Output:
-# 1. Metadata
-# 2. Overview
-# 3. Constructor: __init__(context)
-# ...
-
-# 3. Execute step-by-step
-# Check eligibility first
-init_logic = terminal.execute(f"python scripts/search_skills.py --skill {skill_name} --section 3")
-decision = evaluate(init_logic)
-
-if decision.proceed:
-    # Get execution logic
-    exec_logic = terminal.execute(f"python scripts/search_skills.py --skill {skill_name} --section 4")
-    execute(exec_logic)
-```
-
-### Option B: Full Context (Legacy)
-Read entire instruction set at once.
-
-```python
-# 1. Search
-result = terminal.execute("python scripts/search_skills.py brainstorming")
-skill_name = parse_first_result(result)
-
-# 2. Read instructions
-skill_path = f"skills/{skill_name}/SKILL.md"
-instructions = filesystem.read(skill_path)
-
-# 3. Execute
-follow(instructions)
+// 3. Execute
+follow(instructions);
 ```
 
 ## Exit

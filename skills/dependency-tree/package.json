@@ -1,0 +1,26 @@
+{
+  "name": "@skills/dependency-tree",
+  "version": "1.0.0",
+  "description": "Visualize skill dependencies using npm ls or dependency graph tools",
+  "main": "SKILL.md",
+  "keywords": [
+    "dependency-visualization",
+    "skill-graph",
+    "tree-view",
+    "dependencies"
+  ],
+  "agentskills": {
+    "exit_when": [
+      "No skills installed",
+      "User wants code dependencies, not skill dependencies"
+    ],
+    "proceed_when": [
+      "User wants to see skill relationships",
+      "Debugging skill dependency conflicts"
+    ],
+    "skill_type": "tool-function"
+  },
+  "dependencies": {},
+  "author": "l3enjamin",
+  "license": "MIT"
+}
