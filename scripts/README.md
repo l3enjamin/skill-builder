@@ -1,31 +1,22 @@
 # Scripts
 
-## migrate_to_uv.py
+## search_skills.js
 
-Migrates existing SKILL.md frontmatters to pyproject.toml format for uv compatibility.
+Search for skills by keyword without needing to install dependencies.
 
 **Usage:**
 ```bash
-python scripts/migrate_to_uv.py
+node scripts/search_skills.js <keyword>
 ```
 
 **What it does:**
-1. Scans `skills/` directory for SKILL.md files
-2. Extracts YAML frontmatter
-3. Generates pyproject.toml with:
-   - Project metadata (name, version, description)
-   - Dependencies from `implements` field
-   - Agent Skills configuration in `[tool.agentskills]`
-4. Writes pyproject.toml alongside SKILL.md
+1. Scans `skills/` directory for subdirectories
+2. Reads `package.json` in each skill directory
+3. Matches keyword against `name`, `keywords`, and `description`
+4. Returns list of matching skills
 
-**After migration:**
+**Example:**
 ```bash
-# Sync the workspace
-uv sync
-
-# Verify dependencies
-uv tree --depth 1
-
-# Check for conflicts
-uv tree
+node scripts/search_skills.js brainstorming
+# Output: design-thinking-ideation
 ```
