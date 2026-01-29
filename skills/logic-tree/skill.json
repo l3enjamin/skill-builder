@@ -1,0 +1,37 @@
+{
+  "name": "logic-tree",
+  "description": "Setting up a private tree with bun add/remove/pm/why for general purpose like hypothesis, diagnosis, ideation, etc.",
+  "metadata": {
+    "keywords": ["logic-tree", "hypothesis-tree", "diagnosis", "bun", "tree-structure"],
+    "compatibility": {
+      "proceed_when": ["Need to structure a complex problem", "Creating a hypothesis tree for diagnosis", "Brainstorming alternatives"],
+      "constraints": {
+        "tools": ["terminal.execute", "filesystem"]
+      }
+    },
+    "version": "1.0.0",
+    "skill_type": "tool-function"
+  },
+  "constructor": {
+    "input": "context:\n  root_concept: string      # The root problem or idea\n  working_directory: string # Where to build the tree (optional)",
+    "output": "decision:\n  proceed: bool\n  reason: string",
+    "process": [
+      "# Initialize a new logic tree structure\n# This could involve creating a new directory and a package.json\n# to leverage package manager logic for the tree.",
+      "IF NOT working_directory:\n    working_directory = create_temp_dir(prefix=\"logic_tree_\")",
+      "# Initialize bun project\nterminal.execute(f\"cd {working_directory} && bun init -y\")",
+      "RETURN {proceed: true, reason: \"Logic tree initialized\"}"
+    ]
+  },
+  "execute": {
+    "input": "action: \"add\" | \"remove\" | \"why\" | \"view\"\nparams:\n  node: string         # Name of the branch/hypothesis (e.g., \"network-issue\")\n  parent: string       # Parent node (optional, defaults to root)\n  description: string  # Detail about the hypothesis",
+    "output": "logic_tree:\n  root: string\n  branches: list\npruning_strategy: string\nquick_retrieval: string",
+    "process": [
+      "# Map actions to filesystem/bun operations\n# We use 'bun add' metaphorically or literally if possible,\n# but effectively we are building a dependency graph.",
+      "IF action == \"add\":\n    # Add a branch. We might create a dummy package or folder.\n    # For a logic tree, folders + package.json works well.\n    create_branch(node, parent, description)\n    # Could use 'bun add ./local-path' to link it in package.json",
+      "IF action == \"remove\":\n    remove_branch(node)",
+      "IF action == \"why\":\n    # Explain why a node exists (trace back to root)\n    path = trace_path(node)\n    RETURN explanation",
+      "# Generate outputs\ntree_structure = generate_tree_view() # Visualize the tree\npruning = analyze_pruning(tree_structure) # Identify leaf nodes or weak branches\nretrieval = get_filesystem_paths(tree_structure)",
+      "RETURN {\n    logic_tree: tree_structure,\n    pruning_strategy: pruning,\n    quick_retrieval: retrieval\n}"
+    ]
+  }
+}

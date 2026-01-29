@@ -1,0 +1,33 @@
+{
+  "name": "synthesis",
+  "description": "Retrieve the logic-tree and compile findings into actionable recommendation.",
+  "metadata": {
+    "keywords": ["synthesis", "recommendation", "report", "conclusion"],
+    "compatibility": {
+      "proceed_when": ["Hypothesis testing is complete", "A clear winner has emerged from the tree", "Need a summary of findings"],
+      "constraints": {
+        "tools": ["@skills/logic-tree"]
+      }
+    },
+    "version": "1.0.0",
+    "skill_type": "cognitive"
+  },
+  "constructor": {
+    "input": "context:\n  logic_tree: object      # The processed logic tree\n  test_results: list      # Results from hypothesis testing",
+    "output": "decision:\n  proceed: bool\n  reason: string",
+    "process": [
+      "IF NOT test_results:\n    RETURN {proceed: false, reason: \"No test results to synthesize\"}",
+      "RETURN {proceed: true, reason: \"Ready to synthesize findings\"}"
+    ]
+  },
+  "execute": {
+    "input": "options:\n  format: \"text\" | \"json\" | \"markdown\"",
+    "output": "diagnosis: string\nrecommendation: string\nreasoning: string",
+    "process": [
+      "# 1. Analyze remaining branches in logic tree\nsurvivors = logic_tree.get_branches()",
+      "# 2. Correlate with test results\nconfirmed_causes = [s for s in survivors if s in test_results and s.status == \"survived\"]",
+      "# 3. Formulate diagnosis\nIF len(confirmed_causes) == 1:\n    diagnosis = f\"The root cause is {confirmed_causes[0]}\"\n    recommendation = generate_fix(confirmed_causes[0])\n    reasoning = f\"All other hypotheses were eliminated. Tests confirmed {confirmed_causes[0]}.\"\nELIF len(confirmed_causes) > 1:\n    diagnosis = \"Multiple potential causes remain: \" + \", \".join(confirmed_causes)\n    recommendation = \"Conduct deeper testing on remaining candidates.\"\n    reasoning = \"Initial low-cost tests could not distinguish between these options.\"\nELSE:\n    diagnosis = \"Cause undetermined.\"\n    recommendation = \"Revisit logic tree and add new hypotheses.\"\n    reasoning = \"All initial hypotheses were eliminated.\"",
+      "RETURN {\n    diagnosis: diagnosis,\n    recommendation: recommendation,\n    reasoning: reasoning\n}"
+    ]
+  }
+}
