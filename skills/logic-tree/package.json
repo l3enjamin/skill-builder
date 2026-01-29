@@ -1,0 +1,19 @@
+{
+  "name": "@skills/logic-tree",
+  "version": "1.0.0",
+  "description": "Setting up a private tree with bun add/remove/pm/why for general purpose like hypothesis, diagnosis, ideation, etc.",
+  "main": "SKILL.md",
+  "keywords": [
+    "logic-tree",
+    "hypothesis-tree",
+    "diagnosis",
+    "bun",
+    "tree-structure"
+  ],
+  "agentskills": {
+    "skill_type": "tool-function"
+  },
+  "dependencies": {},
+  "author": "l3enjamin",
+  "license": "MIT"
+}

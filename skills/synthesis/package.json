@@ -1,0 +1,20 @@
+{
+  "name": "@skills/synthesis",
+  "version": "1.0.0",
+  "description": "Retrieve the logic-tree and compile findings into actionable recommendation",
+  "main": "SKILL.md",
+  "keywords": [
+    "synthesis",
+    "recommendation",
+    "reporting",
+    "conclusion"
+  ],
+  "agentskills": {
+    "skill_type": "cognitive"
+  },
+  "dependencies": {
+    "@skills/logic-tree": "workspace:*"
+  },
+  "author": "l3enjamin",
+  "license": "MIT"
+}

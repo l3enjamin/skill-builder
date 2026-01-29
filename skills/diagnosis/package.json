@@ -1,0 +1,19 @@
+{
+  "name": "@skills/diagnosis",
+  "version": "1.0.0",
+  "description": "Use logic-tree to extract actual problem from appearent symptoms",
+  "main": "SKILL.md",
+  "keywords": [
+    "diagnosis",
+    "problem-solving",
+    "root-cause-analysis"
+  ],
+  "agentskills": {
+    "skill_type": "cognitive"
+  },
+  "dependencies": {
+    "@skills/logic-tree": "workspace:*"
+  },
+  "author": "l3enjamin",
+  "license": "MIT"
+}
