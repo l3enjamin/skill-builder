@@ -2,14 +2,19 @@
 
 ## Prerequisites
 
-1. **Install uv** (if not already installed):
+1. **Install Node.js** (v16 or higher):
 ```bash
-curl -LsSf https://astral.sh/uv/install.sh | sh
+node --version  # Should be >= 16.0.0
 ```
 
-2. **Verify installation**:
+If not installed:
 ```bash
-uv --version
+# macOS/Linux
+curl -fsSL https://nodejs.org/dist/latest/install.sh | sh
+
+# Or use nvm
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
+nvm install 16
 ```
 
 ## Quick Start
@@ -20,37 +25,39 @@ git clone https://github.com/l3enjamin/skill-builder.git
 cd skill-builder
 ```
 
-### 2. Initialize the workspace
+### 2. Install skills (optional)
 ```bash
-# Sync all skills and dependencies
-uv sync
+# Install all skills to enable npm query
+npm install
 
-# View the skill tree
-uv tree --depth 1
+# Verify installation
+npm ls --depth=0
 ```
 
-Output should look like:
+Output:
 ```
-skill-builder v1.0.0
-├── dependency-tree v1.0.0
-└── design-thinking-ideation v1.0.0
+@skill-builder/workspace@1.0.0
+├── @skills/dependency-tree@1.0.0
+├── @skills/design-thinking-ideation@1.0.0
+└── @skills/skill-builder@1.0.0
 ```
 
 ### 3. Test skill discovery
 
-**Search by keyword:**
+**Search without installation (instant):**
 ```bash
-grep -r "brainstorming" skills/*/pyproject.toml
+node scripts/search_skills.js brainstorming
+# Output: design-thinking-ideation
 ```
 
-**Check dependencies:**
+**Query if installed:**
 ```bash
-uv tree design-thinking-ideation
+npm query "[keywords~=brainstorming]"
 ```
 
-**Read a skill:**
+**List all:**
 ```bash
-cat skills/design-thinking-ideation/SKILL.md
+npm ls --depth=0
 ```
 
 ## For Agent Integration
@@ -61,7 +68,7 @@ cat skills/design-thinking-ideation/SKILL.md
 # Point to root SKILL.md (router)
 gemini --skill ./SKILL.md
 
-# Agent will use uv to discover skills
+# Agent will use npm to discover skills
 ```
 
 ### Claude Desktop (MCP)
@@ -71,8 +78,8 @@ gemini --skill ./SKILL.md
 {
   "mcpServers": {
     "skill-builder": {
-      "command": "uvx",
-      "args": ["mcp-server-skills", "--workspace", "/path/to/skill-builder"]
+      "command": "node",
+      "args": ["path/to/skill-builder/mcp-server.js"]
     }
   }
 }
@@ -80,132 +87,126 @@ gemini --skill ./SKILL.md
 
 ### Custom Agent
 
-```python
-import subprocess
-import json
+```javascript
+const { execSync } = require('child_process');
 
-def find_skill(keyword):
-    """Search skills by keyword"""
-    result = subprocess.run(
-        ["grep", "-r", f"keywords.*{keyword}", "skills/*/pyproject.toml"],
-        capture_output=True,
-        text=True
-    )
-    
-    # Parse result to get skill path
-    if result.stdout:
-        path = result.stdout.split(":")[0]
-        skill_name = path.split("/")[1]
-        return skill_name
-    return None
+function findSkill(keyword) {
+  try {
+    const result = execSync(
+      `node scripts/search_skills.js ${keyword}`,
+      { encoding: 'utf8' }
+    );
+    return result.trim();
+  } catch (err) {
+    return null;
+  }
+}
 
-def load_skill(skill_name):
-    """Load skill instructions"""
-    skill_path = f"skills/{skill_name}/SKILL.md"
-    with open(skill_path) as f:
-        return f.read()
+function loadSkill(skillName) {
+  const fs = require('fs');
+  const path = require('path');
+  const skillPath = path.join('skills', skillName, 'SKILL.md');
+  return fs.readFileSync(skillPath, 'utf8');
+}
 
-# Usage
-skill = find_skill("brainstorming")
-if skill:
-    instructions = load_skill(skill)
-    # Execute instructions...
+// Usage
+const skill = findSkill('brainstorming');
+if (skill) {
+  const instructions = loadSkill(skill);
+  // Execute instructions...
+}
 ```
 
 ## Creating Your First Skill
 
-### 1. Research phase
+### 1. Search for skill-builder
 
 ```bash
-# Use the researcher prompt
-gemini --file meta/researcher.md "Explain the skill: [your skill name]"
-
-# Save output to a file
+node scripts/search_skills.js create-skill
+# Output: skill-builder
 ```
 
-### 2. Compilation phase
+### 2. Read skill-builder instructions
 
 ```bash
-# Use the compiler with research output + template
-gemini --file meta/compiler.md \
-       --file meta/template.md \
-       --file research_output.md
-
-# Save output as skills/your-skill/SKILL.md
+cat skills/skill-builder/SKILL.md
+# Follow the 3-phase process: research → compile → QA
 ```
 
-### 3. Add pyproject.toml
+### 3. Create skill structure
 
-```toml
-[project]
-name = "your-skill"
-version = "1.0.0"
-description = "Brief description"
-dependencies = []  # Add if skill depends on other skills
+```bash
+mkdir -p skills/your-skill
+cd skills/your-skill
+```
 
-[tool.agentskills]
-keywords = [
+### 4. Add package.json
+
+```json
+{
+  "name": "@skills/your-skill",
+  "version": "1.0.0",
+  "description": "Brief description",
+  "main": "SKILL.md",
+  "keywords": [
     "keyword1",
     "keyword2"
-]
-
-exit_when = [
-    "Condition that makes skill inapplicable"
-]
-
-proceed_when = [
-    "Condition that makes skill optimal"
-]
-
-skill_type = "tool-mcp"  # or tool-function, cognitive, etc.
+  ],
+  "agentskills": {
+    "exit_when": [
+      "Condition that makes skill inapplicable"
+    ],
+    "proceed_when": [
+      "Condition that makes skill optimal"
+    ],
+    "skill_type": "tool-mcp"
+  },
+  "dependencies": {},
+  "license": "MIT"
+}
 ```
 
-### 4. Test the skill
+### 5. Add SKILL.md
+
+Use template from `skills/skill-builder/resources/template.md`
+
+### 6. Test the skill
 
 ```bash
-# Sync to update workspace
-uv sync
+# Search for it
+node scripts/search_skills.js your-keyword
 
-# Verify it appears in tree
-uv tree --depth 1
-
-# Test search
-grep -r "your-keyword" skills/*/pyproject.toml
-```
-
-### 5. Quality check
-
-```bash
-gemini --file meta/quality-assurance.md \
-       --file skills/your-skill/SKILL.md
+# If using npm query, reinstall
+npm install
+npm query "[keywords~=your-keyword]"
 ```
 
 ## Troubleshooting
 
-### uv not found
+### Node.js not found
 ```bash
-# Reinstall uv
-curl -LsSf https://astral.sh/uv/install.sh | sh
+# Install Node.js
+curl -fsSL https://nodejs.org/dist/latest/install.sh | sh
 
-# Add to PATH (if needed)
-export PATH="$HOME/.cargo/bin:$PATH"
+# Or use nvm
+nvm install 16
 ```
 
-### Skill not appearing in tree
+### Skill not appearing
 ```bash
-# Check pyproject.toml syntax
-uv tree your-skill-name
+# Check package.json syntax
+node -e "console.log(JSON.parse(require('fs').readFileSync('skills/your-skill/package.json')))"
 
-# If error, validate TOML
-python -c "import toml; toml.load('skills/your-skill/pyproject.toml')"
+# If using npm query, reinstall
+npm install
 ```
 
 ### Dependency conflicts
 ```bash
-# uv will show conflicts automatically
-uv tree
+# npm will show conflicts automatically
+npm ls
 
-# To resolve, adjust version constraints in pyproject.toml
+# To resolve, adjust version ranges in package.json
 ```
 
 ## Advanced Usage
@@ -214,29 +215,37 @@ uv tree
 
 ```bash
 # Use the dependency-tree skill
+node scripts/search_skills.js dependency
+# Output: dependency-tree
+
 cat skills/dependency-tree/SKILL.md
 
-# See full dependency graph
-uv tree
+# See full tree
+npm ls
 ```
 
 ### Exporting skill registry
 
-```python
-import toml
-from pathlib import Path
-import json
+```javascript
+const fs = require('fs');
+const path = require('path');
 
-skills = []
-for p in Path("skills").rglob("pyproject.toml"):
-    config = toml.load(p)
-    skills.append({
-        "name": config["project"]["name"],
-        "description": config["project"]["description"],
-        "keywords": config["tool"]["agentskills"]["keywords"]
-    })
+const skillsDir = 'skills';
+const skills = [];
 
-print(json.dumps(skills, indent=2))
+for (const dir of fs.readdirSync(skillsDir)) {
+  const pkgPath = path.join(skillsDir, dir, 'package.json');
+  if (fs.existsSync(pkgPath)) {
+    const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+    skills.push({
+      name: pkg.name,
+      description: pkg.description,
+      keywords: pkg.keywords
+    });
+  }
+}
+
+console.log(JSON.stringify(skills, null, 2));
 ```
 
 ### Batch testing skills
@@ -244,18 +253,18 @@ print(json.dumps(skills, indent=2))
 ```bash
 # Test all skills are parseable
 for skill in skills/*/SKILL.md; do
-    echo "Testing $skill..."
-    # Your test logic here
+  echo "Testing $skill..."
+  # Your test logic here
 done
 ```
 
 ## Next Steps
 
 - Browse existing skills in `skills/`
-- Read the template in `meta/template.md`
+- Read the template in `skills/skill-builder/resources/template.md`
 - Check out the [Agent Skills spec](https://agentskills.io/specification)
 - Join discussions in Issues
 
 ---
 
-*Remember: Stop reinventing the pip wheel. Start using the uv skill.*
+*Read less, do more. Built with npm workspaces.*
