@@ -1,0 +1,25 @@
+{
+  "name": "@skill-builder/workspace",
+  "version": "1.0.0",
+  "description": "A meta-skill for creating reusable, context-efficient agent skills",
+  "private": true,
+  "workspaces": [
+    "skills/*"
+  ],
+  "scripts": {
+    "search": "node scripts/search_skills.js",
+    "list": "npm ls --depth=0",
+    "install-all": "npm install"
+  },
+  "keywords": [
+    "agent-skills",
+    "llm",
+    "mcp",
+    "cognitive-automation"
+  ],
+  "author": "l3enjamin",
+  "license": "MIT",
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}

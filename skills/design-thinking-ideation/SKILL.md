@@ -144,4 +144,4 @@ ELSE:
 
 ---
 
-*Example skill demonstrating uv-based routing*
+*Example skill demonstrating npm-based routing*

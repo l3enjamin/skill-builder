@@ -1,0 +1,29 @@
+{
+  "name": "@skills/design-thinking-ideation",
+  "version": "1.0.0",
+  "description": "Generate divergent solution concepts from problem statements using design thinking methodology",
+  "main": "SKILL.md",
+  "keywords": [
+    "brainstorming",
+    "divergent-thinking",
+    "ideation",
+    "design-thinking",
+    "problem-solving"
+  ],
+  "agentskills": {
+    "exit_when": [
+      "Problem statement missing",
+      "User wants convergent solution (single answer)",
+      "Time constraint under 5min"
+    ],
+    "proceed_when": [
+      "Problem defined but solution open",
+      "Need multiple creative approaches",
+      "Stakeholder brainstorming session"
+    ],
+    "skill_type": "cognitive"
+  },
+  "dependencies": {},
+  "author": "l3enjamin",
+  "license": "MIT"
+}

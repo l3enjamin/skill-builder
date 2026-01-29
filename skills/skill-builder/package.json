@@ -1,0 +1,30 @@
+{
+  "name": "@skills/skill-builder",
+  "version": "1.0.0",
+  "description": "Meta-skill for creating new reusable skills. Research, compile, and validate skills using structured templates.",
+  "main": "SKILL.md",
+  "keywords": [
+    "create-skill",
+    "new-skill",
+    "skill-generation",
+    "meta-skill",
+    "skill-template",
+    "skill-research"
+  ],
+  "agentskills": {
+    "exit_when": [
+      "User just wants to use existing skills, not create new ones",
+      "Skill already exists in library",
+      "Request is for modifying existing skill (use skill-updater instead)"
+    ],
+    "proceed_when": [
+      "User wants to create a new skill from scratch",
+      "Need to document a complex workflow as reusable skill",
+      "Converting manual procedure into skill format"
+    ],
+    "skill_type": "orchestration"
+  },
+  "dependencies": {},
+  "author": "l3enjamin",
+  "license": "MIT"
+}
