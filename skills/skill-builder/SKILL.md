@@ -56,14 +56,14 @@ decision:
 **Process:**
 ```python
 # Check if skill already exists
-existing = terminal.execute(f"python scripts/search_skills.py {skill_name}")
+existing = terminal.execute(f"node scripts/search_skills.js {skill_name}")
 IF existing.success:
     RETURN {proceed: false, reason: f"Skill {skill_name} already exists"}
     EXIT
 
 # Check if user wants to create or just use
 IF context lacks "create" OR "new" OR "build":
-    RETURN {proceed: false, reason: "Use search_skills.py to find existing skills"}
+    RETURN {proceed: false, reason: "Use search_skills.js to find existing skills"}
     EXIT
 
 RETURN {proceed: true, reason: "Ready to build new skill"}
@@ -88,7 +88,7 @@ skill_spec:
 artifact:
   type: "complete_skill"
   files:
-    - pyproject.toml
+    - package.json
     - SKILL.md
   status: "ready" | "needs_review"
 ```
@@ -108,25 +108,25 @@ skill_md = execute_phase(compiler_prompt, research_report, template)
 qa_prompt = filesystem.read("skills/skill-builder/resources/quality-assurance.md")
 qa_report = execute_phase(qa_prompt, skill_md, research_report)
 
-# Generate pyproject.toml
-pyproject = generate_pyproject(skill_md.frontmatter)
+# Generate package.json
+package_json = generate_package_json(skill_md.frontmatter)
 
 # Write to skills directory
 skill_dir = f"skills/{skill_spec.name}"
 filesystem.write(f"{skill_dir}/SKILL.md", skill_md)
-filesystem.write(f"{skill_dir}/pyproject.toml", pyproject)
+filesystem.write(f"{skill_dir}/package.json", package_json)
 
 IF qa_report.status == "PASS":
-    RETURN {type: "complete_skill", files: [pyproject, skill_md], status: "ready"}
+    RETURN {type: "complete_skill", files: [package_json, skill_md], status: "ready"}
 ELSE:
-    RETURN {type: "complete_skill", files: [pyproject, skill_md], status: "needs_review", issues: qa_report.issues}
+    RETURN {type: "complete_skill", files: [package_json, skill_md], status: "needs_review", issues: qa_report.issues}
 ```
 
 **Checkpoint:**
 ```python
 IF skill_dir exists AND has valid SKILL.md:
     # Sync workspace
-    terminal.execute("uv sync")
+    terminal.execute("npm install")
     RETURN artifact
 ELSE:
     EXIT "Failed to create skill files"
@@ -143,14 +143,14 @@ User: "Create a skill for managing GitHub issue trees"
 Agent:
 1. Activates skill-builder
 2. Runs 3 phases (research → compile → QA)
-3. Outputs skills/issue-tree/SKILL.md + pyproject.toml
-4. Runs uv sync
+3. Outputs skills/issue-tree/SKILL.md + package.json
+4. Runs npm install
 5. New skill is now searchable
 ```
 
 **Test new skill:**
 ```bash
-python scripts/search_skills.py issue-tree
+node scripts/search_skills.js issue-tree
 # Should return: issue-tree
 ```
 

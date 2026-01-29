@@ -1,20 +1,20 @@
 ---
 name: dependency-tree
 description: |
-  Visualize skill dependency graph using uv. Shows which skills depend on what, detects conflicts, suggests resolution order.
+  Visualize skill dependency graph using npm. Shows which skills depend on what, detects conflicts, suggests resolution order.
 
 metadata:
   keywords:
     - dependency-resolution
     - skill-graph
     - prerequisite-chain
-    - uv-tree
+    - npm-ls
     - conflict-detection
   
   compatibility:
     exit_when:
       - "Not in skill-builder workspace"
-      - "uv is not installed"
+      - "npm is not installed"
       - "No skills installed yet"
     
     proceed_when:
@@ -56,18 +56,18 @@ decision:
 **Process:**
 ```python
 # Check if in skill-builder workspace
-IF NOT exists("pyproject.toml") OR NOT exists("skills/"):
+IF NOT exists("package.json") OR NOT exists("skills/"):
     RETURN {proceed: false, reason: "Not in skill-builder workspace"}
     EXIT
 
-# Check if uv is available
-result = terminal.execute("uv --version")
+# Check if npm is available
+result = terminal.execute("npm --version")
 IF result.error:
-    RETURN {proceed: false, reason: "uv not installed. Install: curl -LsSf https://astral.sh/uv/install.sh | sh"}
+    RETURN {proceed: false, reason: "npm not installed. Install Node.js"}
     EXIT
 
 # Check if any skills exist
-skills = terminal.execute("ls skills/*/pyproject.toml")
+skills = terminal.execute("ls skills/*/package.json")
 IF skills.empty:
     RETURN {proceed: false, reason: "No skills found in workspace"}
     EXIT
@@ -100,28 +100,28 @@ artifact:
 
 **Process:**
 ```python
-# Use uv's native dependency resolution
+# Use npm's native dependency resolution
+cmd = "npm ls"
 IF skill_name:
-    tree = terminal.execute(f"uv tree {skill_name} --depth {depth}")
-ELSE:
-    tree = terminal.execute(f"uv tree --depth {depth}")
+    cmd += f" {skill_name}"
+IF depth:
+    cmd += f" --depth={depth}"
+IF format == "json":
+    cmd += " --json"
+
+tree = terminal.execute(cmd)
 
 # Parse output
 lines = tree.split("\n")
 total_skills = count_unique_packages(lines)
 max_depth = calculate_max_depth(lines)
 
-# Check for conflicts (uv will show warnings)
+# Check for conflicts (npm will show warnings/errors)
 conflicts = parse_conflicts(tree)
-
-IF format == "json":
-    output = convert_to_json(tree)
-ELSE:
-    output = tree  # Native uv tree format
 
 RETURN {
     type: "dependency_graph",
-    content: output,
+    content: tree,
     insights: {
         total_skills: total_skills,
         max_depth: max_depth,
@@ -144,17 +144,17 @@ ELSE:
 
 **See entire skill library:**
 ```bash
-uv tree --depth 1
+npm ls --depth=0
 ```
 
 **Check specific skill dependencies:**
 ```bash
-uv tree design-thinking-ideation
+npm ls design-thinking-ideation
 ```
 
 **Export as JSON for programmatic use:**
 ```bash
-uv tree --depth 2 --format json
+npm ls --depth=2 --json
 ```
 
 ---
@@ -162,16 +162,11 @@ uv tree --depth 2 --format json
 ## Example Output
 
 ```
-$ uv tree design-thinking-ideation
-design-thinking-ideation v1.0.0
-├── filesystem-tools v2.1.0
-│   └── error-handler v1.0.0
-└── terminal-executor v3.0.1
-    └── error-handler v1.0.0  ✓ Shared dependency, no conflict
-
-2 packages with 1 shared dependency
+$ npm ls design-thinking-ideation
+@skill-builder/workspace@1.0.0
+└── @skills/design-thinking-ideation@1.0.0
 ```
 
 ---
 
-*Powered by uv. Because package managers solved this problem decades ago.*
+*Powered by npm. Because package managers solved this problem decades ago.*
