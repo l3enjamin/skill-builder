@@ -1,0 +1,8 @@
+{
+  "name": "@skills/google-adk-example",
+  "version": "1.0.0",
+  "description": "Example skill using Google ADK",
+  "dependencies": {
+    "@google/adk": "^0.2.5"
+  }
+}
