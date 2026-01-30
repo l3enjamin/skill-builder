@@ -1,0 +1,34 @@
+{
+  "name": "diagnosis",
+  "description": "Use logic-tree to extract actual problem from apparent symptoms.",
+  "metadata": {
+    "keywords": ["diagnosis", "problem-definition", "root-cause", "constraints"],
+    "compatibility": {
+      "proceed_when": ["Symptoms are vague or confusing", "Need to define the problem scope"],
+      "constraints": {
+        "tools": ["@skills/logic-tree"]
+      }
+    },
+    "version": "1.0.0",
+    "skill_type": "cognitive"
+  },
+  "constructor": {
+    "input": "context:\n  symptoms: list          # List of observed issues\n  initial_statement: string # User's initial description",
+    "output": "decision:\n  proceed: bool\n  reason: string",
+    "process": [
+      "IF NOT symptoms AND NOT initial_statement:\n    RETURN {proceed: false, reason: \"No input provided for diagnosis\"}",
+      "RETURN {proceed: true, reason: \"Ready to diagnose\"}"
+    ]
+  },
+  "execute": {
+    "input": "symptoms: list\nuser_input: string",
+    "output": "root_question: string\nconstraints: list\nsuccess_criteria: list",
+    "process": [
+      "# 1. Initialize Logic Tree for symptoms\ntree = logic_tree.init(root=\"diagnosis\")",
+      "# 2. Map symptoms to branches\nFOR symptom IN symptoms:\n    logic_tree.add(node=symptom, parent=\"diagnosis\", description=\"Observed symptom\")",
+      "# 3. Analyze to find root question\n# (This implies asking \"why\" for each symptom until convergence)\nroot_question = analyze_root_cause(tree)",
+      "# 4. Extract constraints and criteria\nconstraints = extract_constraints(user_input)\ncriteria = define_success(root_question)",
+      "RETURN {\n    root_question: root_question,\n    constraints: constraints,\n    success_criteria: criteria\n}"
+    ]
+  }
+}

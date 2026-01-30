@@ -1,0 +1,33 @@
+{
+  "name": "hypothesis-testing",
+  "description": "Execute cheapest tests in the logic-tree one-by-one to eliminate branches.",
+  "metadata": {
+    "keywords": ["testing", "verification", "hypothesis", "elimination"],
+    "compatibility": {
+      "proceed_when": ["Logic tree has multiple branches", "Need to narrow down possibilities"],
+      "constraints": {
+        "tools": ["@skills/logic-tree", "terminal.execute"]
+      }
+    },
+    "version": "1.0.0",
+    "skill_type": "cognitive"
+  },
+  "constructor": {
+    "input": "context:\n  logic_tree: object      # The active logic tree structure\n  budget: string          # \"time\" or \"cost\" constraint (e.g. \"low-cost\")",
+    "output": "decision:\n  proceed: bool\n  reason: string",
+    "process": [
+      "IF NOT logic_tree OR NOT logic_tree.branches:\n    RETURN {proceed: false, reason: \"No hypotheses to test\"}",
+      "RETURN {proceed: true, reason: \"Ready to test hypotheses\"}"
+    ]
+  },
+  "execute": {
+    "input": "branches: list",
+    "output": "test_results: list\nconfidence_scores: dict",
+    "process": [
+      "results = []\nscores = {}",
+      "# Sort branches by cost of testing (cheapest first)\nsorted_branches = sort_by_test_cost(branches)",
+      "FOR branch IN sorted_branches:\n    # Formulate a test\n    test = design_test(branch)\n\n    # Execute test (simulation or instruction to user)\n    outcome = run_test(test)\n\n    # Update logic tree based on result\n    IF outcome == \"fail\":\n        logic_tree.remove(node=branch.name)\n        scores[branch.name] = 0.0\n        results.append({branch: branch.name, status: \"eliminated\"})\n    ELSE:\n        scores[branch.name] = calculate_confidence(outcome)\n        results.append({branch: branch.name, status: \"survived\"})",
+      "RETURN {\n    test_results: results,\n    confidence_scores: scores\n}"
+    ]
+  }
+}
