@@ -17,6 +17,18 @@ license: MIT
 
 ## Find Skills
 
+### Smart Search (ADK-powered)
+Uses Google's ADK and Gemini to semantically understand your intent and route to the best skill.
+
+```bash
+# Requires GOOGLE_API_KEY
+export GOOGLE_API_KEY=your_key
+node scripts/smart_search.js "I need to generate some wild ideas"
+```
+
+### Keyword Search (Legacy)
+Fast, local regex-based search.
+
 ```bash
 # Search by keyword (instant, no install needed)
 bun scripts/search_skills.js <keyword>
