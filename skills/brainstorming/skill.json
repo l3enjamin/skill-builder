@@ -1,0 +1,45 @@
+{
+  "name": "brainstorming",
+  "description": "Rapidly generate semantic tokens and group them into MECE categories. Useful for initial problem breakdown.",
+  "metadata": {
+    "keywords": [
+      "brainstorming",
+      "ideation",
+      "MECE",
+      "logic-tree"
+    ],
+    "compatibility": {
+      "proceed_when": [
+        "Problem is defined but solution space is open",
+        "Need to structure a complex problem",
+        "Preparing for logic-tree construction"
+      ],
+      "constraints": {
+        "tools": ["node"]
+      }
+    },
+    "version": "1.0.0",
+    "skill_type": "cognitive"
+  },
+  "constructor": {
+    "input": "context:\n  problem_statement: string\n  constraints: list (optional)",
+    "output": "decision:\n  proceed: bool",
+    "process": [
+      "IF NOT problem_statement:\n    RETURN {proceed: false, reason: \"Problem statement required\"}",
+      "RETURN {proceed: true}"
+    ]
+  },
+  "execute": {
+    "input": "None (uses context from constructor)",
+    "output": "validated_groups: dict",
+    "process": [
+      "Step 1: Rapidly generate at least 20 semantic tokens related to the problem. Focus on quantity and coverage. Do not stop to reason details yet.",
+      "Step 2: Review the tokens and group them into Mutually Exclusive, Collectively Exhaustive (MECE) categories.",
+      "Step 3: Save your tokens to a temporary file (e.g. `tokens.json`) and groups to another (e.g. `groups.json`).",
+      "Step 4: Validate your grouping using the validator tool.",
+      "COMMAND: node skills/brainstorming/validator.js --tokens-file tokens.json --groups-file groups.json",
+      "IF validation fails (> 0 exit code):\n    Review the error message (missing items, duplicates).\n    Refine your groups and tokens.\n    Retry up to 5 times.",
+      "IF validation passes:\n    Proceed with the validated JSON structure."
+    ]
+  }
+}

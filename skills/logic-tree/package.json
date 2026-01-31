@@ -1,13 +1,13 @@
 {
   "name": "@skills/logic-tree",
   "version": "1.0.0",
-  "description": "Setting up a private tree with bun add/remove/pm/why for general purpose like hypothesis, diagnosis, ideation, etc.",
+  "description": "Manage a hypothesis/issue/decision tree using Git branches as memory for structured problem solving.",
   "main": "SKILL.md",
   "keywords": [
     "logic-tree",
     "hypothesis-tree",
     "diagnosis",
-    "bun",
+    "git",
     "tree-structure"
   ],
   "agentskills": {
