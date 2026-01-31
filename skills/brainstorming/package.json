@@ -1,14 +1,14 @@
 {
-  "name": "@skills/design-thinking-ideation",
+  "name": "@skills/brainstorming",
   "version": "1.0.0",
-  "description": "Generate divergent solution concepts from problem statements using design thinking methodology",
+  "description": "Rapidly generate semantic tokens and group them into MECE categories for logic tree construction.",
   "main": "SKILL.md",
   "keywords": [
     "brainstorming",
-    "divergent-thinking",
     "ideation",
-    "design-thinking",
-    "problem-solving"
+    "clustering",
+    "MECE",
+    "logic-tree"
   ],
   "agentskills": {
     "exit_when": [
