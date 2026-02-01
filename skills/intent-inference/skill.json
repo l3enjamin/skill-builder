@@ -1,0 +1,43 @@
+{
+  "name": "intent-inference",
+  "description": "Analyze the user's utterance to extract a structured intent classification including role, epistemic stance, user state, and final intent.",
+  "metadata": {
+    "keywords": ["intent", "classification", "context", "understanding", "analysis"],
+    "compatibility": {
+      "proceed_when": ["Agent is unsure about user intent", "Need to clarify ambiguous request", "Starting a new task interaction"],
+      "constraints": {
+        "tools": ["filesystem.write"]
+      }
+    },
+    "version": "1.0.0",
+    "skill_type": "cognitive"
+  },
+  "constructor": {
+    "input": "context:\n  user_utterance: string    # The raw message from the user\n  history: list (optional)  # Previous conversation history",
+    "output": "decision:\n  proceed: bool\n  reason: string",
+    "process": [
+      "IF NOT user_utterance:\n    RETURN {proceed: false, reason: \"No user utterance to analyze\"}",
+      "RETURN {proceed: true, reason: \"Ready to infer intent\"}"
+    ]
+  },
+  "execute": {
+    "input": "user_utterance: string",
+    "output": "analysis_artifact:\n  utterance_role: \"opinion\" | \"claim\" | \"experience\" | \"request\" | \"meta\" | \"mixed\"\n  epistemic_stance: \"firsthand\" | \"secondhand\" | \"third-party\" | \"speculation\" | \"unknown\"\n  user_state: object\n  intent: \"inform\" | \"validate\" | \"decide\" | \"solve\" | \"collaborate\"\n  confidence: number",
+    "process": [
+      "# Step 1: Analyze Utterance Role",
+      "Determine what the message is doing (Opinion, Claim, Experience, Request, Meta, Mixed).",
+      "# Step 2: Analyze Epistemic Stance",
+      "Determine the source of 'facts' (Firsthand, Secondhand, Third-party, Speculation, Unknown).",
+      "# Step 3: Analyze User State",
+      "Identify Preferences (values, constraints) and Knowledge Level (novice, competent, expert).",
+      "# Step 4: Infer Intent",
+      "Based on the above, classify intent into: Inform, Validate, Decide, Solve, Collaborate.",
+      "# Step 5: Generate Output",
+      "Construct a JSON object with the findings.",
+      "# Step 6: Save Artifact",
+      "Save the JSON to 'debug/intent_analysis.json' for reference.",
+      "Use 'write_file' tool (if available) or sanitized terminal command to save the file.",
+      "RETURN analysis_artifact"
+    ]
+  }
+}

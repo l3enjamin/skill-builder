@@ -1,0 +1,13 @@
+{
+  "name": "scoping",
+  "version": "1.0.0",
+  "description": "Define the scope of the task by identifying in-scope and out-of-scope items.",
+  "keywords": [
+    "scope",
+    "boundaries",
+    "constraints",
+    "planning"
+  ],
+  "author": "Jules",
+  "license": "MIT"
+}

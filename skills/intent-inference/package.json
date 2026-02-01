@@ -1,0 +1,14 @@
+{
+  "name": "intent-inference",
+  "version": "1.0.0",
+  "description": "Analyze user interaction to determine intent, stance, and state.",
+  "keywords": [
+    "intent",
+    "classification",
+    "context",
+    "analysis",
+    "understanding"
+  ],
+  "author": "Jules",
+  "license": "MIT"
+}
