@@ -1,0 +1,14 @@
+{
+  "name": "problem-statement",
+  "version": "1.0.0",
+  "description": "Articulate the problem using 5 Whys analysis, brainstorming, and logic trees.",
+  "keywords": [
+    "problem-definition",
+    "5-whys",
+    "root-cause",
+    "brainstorming",
+    "logic-tree"
+  ],
+  "author": "Jules",
+  "license": "MIT"
+}

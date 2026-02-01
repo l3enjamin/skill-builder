@@ -1,0 +1,43 @@
+{
+  "name": "scoping",
+  "description": "Explicitly define the boundaries of the task by identifying items that are in-scope and out-of-scope.",
+  "metadata": {
+    "keywords": ["scope", "boundaries", "constraints", "planning"],
+    "compatibility": {
+      "proceed_when": ["Agent is unsure about task boundaries", "Need to limit the scope of work", "User request is too broad"],
+      "constraints": {
+        "tools": ["filesystem.write"]
+      }
+    },
+    "version": "1.0.0",
+    "skill_type": "cognitive"
+  },
+  "constructor": {
+    "input": "context:\n  problem_statement: string # The defined problem",
+    "output": "decision:\n  proceed: bool\n  reason: string",
+    "process": [
+      "IF NOT problem_statement:\n    RETURN {proceed: false, reason: \"Problem statement required to define scope\"}",
+      "RETURN {proceed: true, reason: \"Ready to define scope\"}"
+    ]
+  },
+  "execute": {
+    "input": "problem_statement: string",
+    "output": "scope_artifact:\n  in_scope: list [string] # 3 items\n  out_of_scope: list [string] # 3 items\n  reasoning: string",
+    "process": [
+      "# Step 1: Analyze Problem Statement",
+      "Review the problem statement: <problem_statement>",
+      "# Step 2: Identify In-Scope Items",
+      "List 3 distinct items/areas that are critical to solving the problem.",
+      "Constraint: Items must be of different nature (e.g., technical, process, documentation).",
+      "# Step 3: Identify Out-Of-Scope Items",
+      "List 3 distinct items/areas that are explicitly excluded to prevent scope creep.",
+      "Constraint: Items must be of different nature.",
+      "# Step 4: Validate",
+      "Ensure logical separation between In-Scope and Out-Of-Scope.",
+      "# Step 5: Save Artifact",
+      "artifact = {in_scope: [...], out_of_scope: [...], reasoning: ...}",
+      "Use 'write_file' tool (if available) or sanitized terminal command to save 'debug/scope_definition.json'.",
+      "RETURN artifact"
+    ]
+  }
+}

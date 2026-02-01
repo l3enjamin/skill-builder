@@ -1,0 +1,62 @@
+{
+  "name": "problem-statement",
+  "description": "Orchestrate 'brainstorming' and 'logic-tree' skills to perform a 5 Whys analysis and articulate a clear problem statement.",
+  "metadata": {
+    "keywords": ["problem-definition", "5-whys", "root-cause", "orchestration"],
+    "compatibility": {
+      "proceed_when": ["Agent cannot articulate the problem", "Root cause is unclear", "Need deep problem analysis"],
+      "constraints": {
+        "tools": ["@skills/brainstorming", "@skills/logic-tree", "filesystem.write"]
+      }
+    },
+    "version": "1.0.0",
+    "skill_type": "orchestration"
+  },
+  "constructor": {
+    "input": "context:\n  initial_symptom: string   # The starting observation or issue",
+    "output": "decision:\n  proceed: bool\n  reason: string",
+    "process": [
+      "IF NOT initial_symptom:\n    RETURN {proceed: false, reason: \"Initial symptom required\"}",
+      "RETURN {proceed: true, reason: \"Ready to define problem\"}"
+    ]
+  },
+  "execute": {
+    "input": "initial_symptom: string",
+    "output": "problem_artifact:\n  root_cause: string\n  problem_statement: string\n  logic_tree_snapshot: object",
+    "process": [
+      "# Step 1: Initialize Logic Tree",
+      "sanitized_symptom = sanitize_shell_input(initial_symptom) # Escape quotes to prevent injection",
+      "terminal.execute(`node skills/logic-tree/tree_manager.js add --name \"Symptom\" --content \"${sanitized_symptom}\"`)",
+      "current_level_node = \"Symptom\"",
+      "",
+      "# Step 2: 5 Whys Loop (Repeat up to 5 times)",
+      "FOR i FROM 1 TO 5:",
+      "    # Brainstorm causes for current node",
+      "    prompt = sanitize_shell_input(\"Why does \" + current_level_node + \" happen?\")",
+      "    brainstorm_result = terminal.execute(`bun scripts/run_skill.js brainstorming --input \"${prompt}\"`)",
+      "    causes = brainstorm_result.validated_groups",
+      "    ",
+      "    # Select the most probable cause (Self-Correction/Decision)",
+      "    # (In a real interactive mode, user might select. Here, agent estimates or stops if root found)",
+      "    most_probable_cause = select_best_candidate(causes)",
+      "    ",
+      "    # Add to Logic Tree",
+      "    sanitized_cause = sanitize_shell_input(most_probable_cause)",
+      "    terminal.execute(`node skills/logic-tree/tree_manager.js add --name \"Why_${i}\" --parent \"${current_level_node}\" --content \"${sanitized_cause}\"`)",
+      "    current_level_node = \"Why_\" + i",
+      "    ",
+      "    IF is_root_cause(most_probable_cause):",
+      "        BREAK",
+      "",
+      "# Step 3: Formulate Problem Statement",
+      "root_cause = current_level_node.content",
+      "problem_statement = \"The problem of \" + initial_symptom + \" is caused by \" + root_cause",
+      "",
+      "# Step 4: Save Artifact",
+      "snapshot = terminal.execute('node skills/logic-tree/tree_manager.js list')",
+      "artifact = {root_cause: root_cause, problem_statement: problem_statement, tree: snapshot}",
+      "Use 'write_file' tool (if available) or sanitized terminal command to save 'debug/problem_definition.json'.",
+      "RETURN artifact"
+    ]
+  }
+}
