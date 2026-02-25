@@ -4,22 +4,18 @@
  * Usage: node scripts/search_skills.js <keyword>
  */
 
-const fs = require('fs');
+const fs = require('fs').promises;
 const path = require('path');
-const { Worker } = require('worker_threads');
 
 /**
  * Load skill metadata from package.json
  */
-function loadSkillMetadata(skillDir) {
+async function loadSkillMetadata(skillDir) {
   const packagePath = path.join(skillDir, 'package.json');
   
-  if (!fs.existsSync(packagePath)) {
-    return null;
-  }
-  
   try {
-    const pkg = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
+    const content = await fs.readFile(packagePath, 'utf8');
+    const pkg = JSON.parse(content);
     return {
       name: path.basename(skillDir),
       keywords: pkg.keywords || [],
@@ -33,35 +29,39 @@ function loadSkillMetadata(skillDir) {
 /**
  * Search skills by keyword with case-insensitive matching
  */
-function searchSkills(keyword) {
+async function searchSkills(keyword) {
   const skillsDir = path.join(process.cwd(), 'skills');
   
-  if (!fs.existsSync(skillsDir)) {
+  try {
+    await fs.access(skillsDir);
+  } catch (err) {
     return [];
   }
   
   const pattern = new RegExp(keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
-  const matches = [];
   
   // Read all skill directories
-  const entries = fs.readdirSync(skillsDir, { withFileTypes: true });
-  
-  for (const entry of entries) {
-    if (!entry.isDirectory()) continue;
-    
-    const skillPath = path.join(skillsDir, entry.name);
-    const metadata = loadSkillMetadata(skillPath);
-    
-    if (!metadata) continue;
-    
-    // Search in keywords and description
-    const searchText = `${metadata.keywords.join(' ')} ${metadata.description}`;
-    
-    if (pattern.test(searchText)) {
-      matches.push(metadata.name);
-    }
+  let entries;
+  try {
+    entries = await fs.readdir(skillsDir, { withFileTypes: true });
+  } catch (err) {
+    return [];
   }
   
+  const skillPromises = entries
+    .filter(entry => entry.isDirectory())
+    .map(entry => loadSkillMetadata(path.join(skillsDir, entry.name)));
+
+  const results = await Promise.all(skillPromises);
+
+  const matches = results
+    .filter(metadata => {
+      if (!metadata) return false;
+      const searchText = `${metadata.keywords.join(' ')} ${metadata.description}`;
+      return pattern.test(searchText);
+    })
+    .map(metadata => metadata.name);
+
   return matches.sort();
 }
 
@@ -75,14 +75,17 @@ if (require.main === module) {
   }
   
   const keyword = args[0];
-  const results = searchSkills(keyword);
-  
-  if (results.length > 0) {
-    results.forEach(skill => console.log(skill));
-  } else {
-    console.error(`No skills found for: ${keyword}`);
+  searchSkills(keyword).then(results => {
+    if (results.length > 0) {
+      results.forEach(skill => console.log(skill));
+    } else {
+      console.error(`No skills found for: ${keyword}`);
+      process.exit(1);
+    }
+  }).catch(err => {
+    console.error(`Error: ${err.message}`);
     process.exit(1);
-  }
+  });
 }
 
 module.exports = { searchSkills, loadSkillMetadata };

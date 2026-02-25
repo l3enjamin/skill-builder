@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const fs = require('fs');
+const fs = require('fs').promises;
 const path = require('path');
 const readline = require('readline');
 const { searchSkills } = require('./search_skills');
@@ -21,8 +21,16 @@ async function runSkill(skillName) {
   let skillPath = path.join(skillsDir, skillName, 'skill.json');
 
   // If direct path doesn't exist, try search
-  if (!fs.existsSync(skillPath)) {
-    const results = searchSkills(skillName);
+  let exists = false;
+  try {
+    await fs.access(skillPath);
+    exists = true;
+  } catch (err) {
+    exists = false;
+  }
+
+  if (!exists) {
+    const results = await searchSkills(skillName);
     if (results.length === 0) {
       console.error(`❌ Skill '${skillName}' not found.`);
       process.exit(1);
@@ -38,12 +46,14 @@ async function runSkill(skillName) {
     }
   }
 
-  if (!fs.existsSync(skillPath)) {
-      console.error(`❌ Skill file 'skill.json' not found for '${skillName}'. (Expected at ${skillPath})`);
-      process.exit(1);
+  let skill;
+  try {
+    const content = await fs.readFile(skillPath, 'utf8');
+    skill = JSON.parse(content);
+  } catch (err) {
+    console.error(`❌ Skill file 'skill.json' not found or invalid for '${skillName}'. (Expected at ${skillPath})`);
+    process.exit(1);
   }
-
-  const skill = JSON.parse(fs.readFileSync(skillPath, 'utf8'));
   console.log(`✅ Loaded skill: ${skill.name || path.basename(path.dirname(skillPath))}\n`);
 
   // --- Constructor Phase ---
