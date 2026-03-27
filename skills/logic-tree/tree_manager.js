@@ -147,9 +147,10 @@ class TreeManager {
         console.log(`Pruning node '${nodePath}' and ${toDelete.length - 1} descendants...`);
 
         const currentBranch = this._exec('git', ['branch', '--show-current']);
-        if (toDelete.includes(currentBranch)) {
+        const toDeleteSet = new Set(toDelete);
+        if (toDeleteSet.has(currentBranch)) {
             // Find safe branch
-            const safeBranch = branches.find(b => !toDelete.includes(b));
+            const safeBranch = branches.find(b => !toDeleteSet.has(b));
             if (safeBranch) {
                 this._exec('git', ['checkout', safeBranch]);
             } else {
@@ -186,7 +187,10 @@ class TreeManager {
     }
 }
 
+module.exports = { TreeManager };
+
 function main() {
+    if (require.main !== module) return;
     const args = process.argv.slice(2);
     if (args.length === 0) {
         console.log("Usage: node tree_manager.js <action> [options]");
