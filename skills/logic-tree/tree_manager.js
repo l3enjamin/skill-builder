@@ -15,8 +15,7 @@ class TreeManager {
         try {
             execFileSync('git', ['rev-parse', '--is-inside-work-tree'], { stdio: 'ignore' });
         } catch (e) {
-            console.error("❌ Error: Not inside a git repository. Initialize git first.");
-            process.exit(1);
+            throw new Error("❌ Error: Not inside a git repository. Initialize git first.");
         }
     }
 
@@ -58,8 +57,7 @@ class TreeManager {
             try {
                 this._exec('git', ['show-ref', '--verify', `refs/heads/${parentBranch}`]);
             } catch (e) {
-                console.error(`❌ Error: Parent node '${parentPath}' (branch ${parentBranch}) does not exist.`);
-                process.exit(1);
+                throw new Error(`❌ Error: Parent node '${parentPath}' (branch ${parentBranch}) does not exist.`);
             }
             fullPath = `${parentPath}/${name}`;
         }
@@ -69,10 +67,10 @@ class TreeManager {
         // Check if branch exists
         try {
             this._exec('git', ['show-ref', '--verify', `refs/heads/${newBranch}`]);
-            console.error(`❌ Error: Node '${fullPath}' already exists (Branch: ${newBranch}).`);
-            process.exit(1);
+            throw new Error(`❌ Error: Node '${fullPath}' already exists (Branch: ${newBranch}).`);
         } catch (e) {
-            // Good
+            if (e.message.includes('already exists')) throw e;
+            // Good - branch does not exist
         }
 
         console.log(`Creating node '${fullPath}' on branch '${newBranch}'...`);
@@ -84,8 +82,7 @@ class TreeManager {
             try {
                  this._exec('git', ['checkout', '-b', newBranch]);
             } catch (e) {
-                console.error(`❌ Error creating branch ${newBranch}: ${e.message}`);
-                process.exit(1);
+                throw new Error(`❌ Error creating branch ${newBranch}: ${e.message}`);
             }
         }
 
@@ -140,8 +137,7 @@ class TreeManager {
         const toDelete = branches.filter(b => b === targetBranchPrefix || b.startsWith(targetBranchPrefix + SEPARATOR));
 
         if (toDelete.length === 0) {
-            console.error(`❌ Node '${nodePath}' not found.`);
-            process.exit(1);
+            throw new Error(`❌ Node '${nodePath}' not found.`);
         }
 
         console.log(`Pruning node '${nodePath}' and ${toDelete.length - 1} descendants...`);
@@ -154,8 +150,7 @@ class TreeManager {
             if (safeBranch) {
                 this._exec('git', ['checkout', safeBranch]);
             } else {
-                console.error("❌ Error: Cannot prune because no safe branch exists to switch to.");
-                process.exit(1);
+                throw new Error("❌ Error: Cannot prune because no safe branch exists to switch to.");
             }
         }
 
@@ -181,8 +176,7 @@ class TreeManager {
                 console.log(fs.readFileSync('README.md', 'utf8'));
             }
         } catch (e) {
-            console.error(`❌ Error: Could not checkout '${nodePath}'. Does it exist?`);
-            process.exit(1);
+            throw new Error(`❌ Error: Could not checkout '${nodePath}'. Does it exist?`);
         }
     }
 }
@@ -197,7 +191,8 @@ function main() {
         process.exit(1);
     }
 
-    const tm = new TreeManager();
+    try {
+        const tm = new TreeManager();
     const action = args[0];
 
     // Helper to get value for a flag
@@ -244,6 +239,10 @@ function main() {
         default:
             console.error(`❌ Unknown action: ${action}`);
             process.exit(1);
+    }
+    } catch (e) {
+        console.error(e.message);
+        process.exit(1);
     }
 }
 
