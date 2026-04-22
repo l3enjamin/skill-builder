@@ -76,8 +76,11 @@ class TreeManager {
         console.log(`Creating node '${fullPath}' on branch '${newBranch}'...`);
 
         if (parentBranch) {
-            this._exec('git', ['checkout', parentBranch]);
-            this._exec('git', ['checkout', '-b', newBranch]);
+            try {
+                this._exec('git', ['checkout', '-b', newBranch, parentBranch]);
+            } catch (e) {
+                throw new Error(`❌ Error creating branch ${newBranch} from ${parentBranch}: ${e.message}`);
+            }
         } else {
             try {
                  this._exec('git', ['checkout', '-b', newBranch]);
