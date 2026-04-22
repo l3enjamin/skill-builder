@@ -154,14 +154,22 @@ class TreeManager {
             }
         }
 
-        toDelete.forEach(b => {
+        if (toDelete.length > 0) {
             try {
-                this._exec('git', ['branch', '-D', b]);
-                console.log(`Deleted ${b}`);
+                this._exec('git', ['branch', '-D', ...toDelete]);
+                toDelete.forEach(b => console.log(`Deleted ${b}`));
             } catch (e) {
-                console.error(`Failed to delete ${b}: ${e.message}`);
+                // Fallback to individual deletion if batch fails
+                toDelete.forEach(b => {
+                    try {
+                        this._exec('git', ['branch', '-D', b]);
+                        console.log(`Deleted ${b}`);
+                    } catch (e2) {
+                        console.error(`Failed to delete ${b}: ${e2.message}`);
+                    }
+                });
             }
-        });
+        }
         console.log("✅ Prune complete.");
     }
 
