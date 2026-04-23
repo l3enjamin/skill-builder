@@ -79,7 +79,7 @@ class TreeManager {
             try {
                 this._exec('git', ['checkout', '-b', newBranch, parentBranch]);
             } catch (e) {
-                throw new Error(`❌ Error creating branch ${newBranch} from ${parentBranch}: ${e.message}`);
+                throw new Error(`❌ Error creating branch ${newBranch} from ${parentBranch}: ${e.stderr || e.message}`);
             }
         } else {
             try {
